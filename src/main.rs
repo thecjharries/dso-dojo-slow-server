@@ -12,14 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
+use serde::Serialize;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+#[derive(Serialize)]
+struct PingResponse {
+    message: String,
+}
+
+#[get("/ping")]
+fn ping() -> Json<PingResponse> {
+    Json(PingResponse {
+        message: "pong".to_string(),
+    })
 }
 
 #[launch]
 fn rocket() -> _ {
-    build().mount("/", routes![index])
+    build().mount("/", routes![ping])
 }
