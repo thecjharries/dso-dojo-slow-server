@@ -14,9 +14,9 @@
 
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct PingResponse {
     message: String,
 }
@@ -31,4 +31,23 @@ fn ping() -> Json<PingResponse> {
 #[launch]
 fn rocket() -> _ {
     build().mount("/", routes![ping])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket::local::blocking::{Client, LocalResponse};
+
+    #[test]
+    fn test_ping() {
+        let client = Client::tracked(rocket()).unwrap();
+        let response: LocalResponse = client.get("/ping").dispatch();
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        assert_eq!(
+            response.into_json::<PingResponse>().unwrap(),
+            PingResponse {
+                message: "pong".to_string(),
+            }
+        );
+    }
 }
