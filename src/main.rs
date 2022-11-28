@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
 use serde::{Deserialize, Serialize};
+use std::io::Result;
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct PingResponse {
@@ -28,9 +30,14 @@ fn ping() -> Json<PingResponse> {
     })
 }
 
+#[get("/")]
+async fn index() -> Result<NamedFile> {
+    NamedFile::open("files/index.html").await
+}
+
 #[launch]
 fn rocket() -> _ {
-    build().mount("/", routes![ping])
+    build().mount("/", routes![index, ping])
 }
 
 #[cfg(test)]
