@@ -44,6 +44,22 @@ fn rocket() -> _ {
 mod tests {
     use super::*;
     use rocket::local::blocking::{Client, LocalResponse};
+    use std::fs::read_to_string;
+
+    #[test]
+    fn test_index() {
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+        let response: LocalResponse = client.get("/").dispatch();
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        assert_eq!(
+            response.content_type(),
+            Some(rocket::http::ContentType::HTML)
+        );
+        assert_eq!(
+            response.into_string().unwrap(),
+            read_to_string("files/index.html").unwrap()
+        );
+    }
 
     #[test]
     fn test_ping() {
