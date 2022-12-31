@@ -15,8 +15,28 @@
 use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
+use rocket_sync_db_pools::diesel::prelude::*;
+use rocket_sync_db_pools::diesel::sql_query;
+use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
 use std::io::Result;
+
+const API_WAIT_SECONDS: i32 = 30;
+
+#[database("postgres")]
+struct Database(diesel::PgConnection);
+
+#[get("/api")]
+async fn api(conn: Database) -> String {
+    conn.run(|c| {
+        sql_query("SELECT pg_sleep($1)")
+            .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
+            .execute(c)
+            .unwrap();
+    })
+    .await;
+    "howdy".to_string()
+}
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct PingResponse {
@@ -37,7 +57,9 @@ async fn index() -> Result<NamedFile> {
 
 #[launch]
 fn rocket() -> _ {
-    build().mount("/", routes![index, ping])
+    build()
+        .attach(Database::fairing())
+        .mount("/", routes![index, ping, api])
 }
 
 #[cfg(test)]
@@ -45,6 +67,7 @@ mod tests {
     use super::*;
     use rocket::local::blocking::{Client, LocalResponse};
     use std::fs::read_to_string;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn test_index() {
@@ -72,5 +95,16 @@ mod tests {
                 message: "pong".to_string(),
             }
         );
+    }
+
+    #[test]
+    fn test_api() {
+        let client: Client = Client::tracked(rocket()).unwrap();
+        let start: Instant = Instant::now();
+        let response: LocalResponse = client.get("/api").dispatch();
+        let end: Instant = Instant::now();
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        assert_eq!(response.into_string().unwrap(), "howdy");
+        assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
     }
 }
