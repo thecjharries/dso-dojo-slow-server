@@ -11,17 +11,24 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Cache cargo deps
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Start Postgres
         run: make dev-up
-      - run: cargo test --verbose
+
+      - name: Test the server
+        run: cargo test --verbose
+
       - name: Stop Postgres
         if: always()
         run: make dev-down
