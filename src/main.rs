@@ -15,12 +15,37 @@
 use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
+use rocket_sync_db_pools::diesel::prelude::*;
+use rocket_sync_db_pools::diesel::sql_query;
+use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
 use std::io::Result;
+
+#[database("postgres")]
+struct Database(diesel::PgConnection);
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct PingResponse {
     message: String,
+}
+
+#[derive(diesel::QueryableByName)]
+struct QueryResult {
+    #[sql_type = "diesel::sql_types::Text"]
+    clock_timestamp: String,
+}
+
+#[get("/api")]
+async fn api(conn: Database) -> String {
+    let result: Vec<QueryResult> = conn
+        .run(|c| {
+            let query_result = sql_query("SELECT to_char(clock_timestamp(), 'HH:MM:SS') AS clock_timestamp")
+                .load(c)
+                .unwrap();
+            query_result
+        })
+        .await;
+    result[0].clock_timestamp.clone()
 }
 
 #[get("/ping")]
@@ -37,7 +62,9 @@ async fn index() -> Result<NamedFile> {
 
 #[launch]
 fn rocket() -> _ {
-    build().mount("/", routes![index, ping])
+    build()
+        .attach(Database::fairing())
+        .mount("/", routes![index, ping, api])
 }
 
 #[cfg(test)]
