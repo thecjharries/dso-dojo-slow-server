@@ -67,6 +67,7 @@ mod tests {
     use super::*;
     use rocket::local::blocking::{Client, LocalResponse};
     use std::fs::read_to_string;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn test_index() {
@@ -94,5 +95,16 @@ mod tests {
                 message: "pong".to_string(),
             }
         );
+    }
+
+    #[test]
+    fn test_api() {
+        let client: Client = Client::tracked(rocket()).unwrap();
+        let start: Instant = Instant::now();
+        let response: LocalResponse = client.get("/api").dispatch();
+        let end: Instant = Instant::now();
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        assert_eq!(response.into_string().unwrap(), "howdy");
+        assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
     }
 }
