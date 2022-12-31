@@ -21,31 +21,26 @@ use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
 use std::io::Result;
 
+const API_WAIT_SECONDS: i32 = 30;
+
 #[database("postgres")]
 struct Database(diesel::PgConnection);
+
+#[get("/api")]
+async fn api(conn: Database) -> String {
+    conn.run(|c| {
+        sql_query("SELECT pg_sleep($1)")
+            .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
+            .execute(c)
+            .unwrap();
+    })
+    .await;
+    "howdy".to_string()
+}
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct PingResponse {
     message: String,
-}
-
-#[derive(diesel::QueryableByName)]
-struct QueryResult {
-    #[sql_type = "diesel::sql_types::Text"]
-    clock_timestamp: String,
-}
-
-#[get("/api")]
-async fn api(conn: Database) -> String {
-    let result: Vec<QueryResult> = conn
-        .run(|c| {
-            let query_result = sql_query("SELECT to_char(clock_timestamp(), 'HH:MM:SS') AS clock_timestamp")
-                .load(c)
-                .unwrap();
-            query_result
-        })
-        .await;
-    result[0].clock_timestamp.clone()
 }
 
 #[get("/ping")]
