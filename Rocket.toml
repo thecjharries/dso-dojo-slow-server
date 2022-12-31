@@ -1,0 +1,2 @@
+[global.databases.postgres]
+url = "postgres://postgres:plaintext@localhost:5432/postgres"
