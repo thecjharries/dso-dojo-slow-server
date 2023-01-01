@@ -3,25 +3,17 @@ FILE=exercise-stack.yaml
 .PHONY: all
 all:
 
-.PHONY: dev-up
-dev-up:
-	docker-compose --file dev-stack.yaml up --detach
-
-.PHONY: dev-down
-dev-down:
-	docker-compose --file dev-stack.yaml down
-
 .PHONY: docker-build
 docker-build:
 	docker build --tag thecjharries/dso_dojo_slow_postgres:latest .
 
-.PHONY: exercise-up
-exercise-up:
-	docker-compose --file exercise-stack.yaml up --detach
+.PHONY: dev
+dev:
+	$(MAKE) docker-compose FILE=dev-stack.yaml
 
-.PHONY: exercise-down
-exercise-down:
-	docker-compose --file exercise-stack.yaml down
+.PHONY: exercise
+exercise: docker-build
+	$(MAKE) docker-compose FILE=exercise-stack.yaml
 
 .PHONY: docker-compose
 docker-compose:
