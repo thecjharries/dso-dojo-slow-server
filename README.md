@@ -14,6 +14,8 @@ The following things are insecure. If there are others, feel free to open a PR t
 * [The Dockerfile](./Dockerfile) defines a connection string in plaintext. Never store this in a repository.
 * [The exercise compose file](./exercise-stack.yaml) defines a connection string in plaintext. Never store this in a repository.
 
+Note that all of these things are the same secret. One of the best ways to handle this in a production environment would be to store the secret in a secret store then consume it from the application itself.
+
 ## Overview
 
 This repo provides a server that has intentionally slow database queries.
