@@ -92,6 +92,31 @@ Behind the scenes, `/api/<id>` runs [a delay in Postgres](https://web.archive.or
 
 You could easily solve the problem by removing the delay, but that would be cheating. There's at least one way to fix this by editing the server itself. Since our goal is to LARP a problem with an external system we have no control over, the ideal solution would be to fix the problem without changing the server. The call is deterministic. That should be enough to get you started.
 
+### Getting Set Up
+
+The first thing you'll need to do is get the server running locally.
+
+```bash
+git clone https://github.com/thecjharries/dso-dojo-slow-server
+cd dso-dojo-slow-server
+make docker-build
+```
+
+You'll now have a local image called `thecjharries/dso_dojo_slow_postgres` (note that we're building locally because that's a useful skill and to avoid any hosting platform retention policy). You can launch the exercise with this command (still inside the `dso-dojo-slow-server` directory):
+
+```bash
+make exercise
+```
+
+You'll now be able to access the exercise in your browser. It's up to you to figure out how!
+
+### Building a solution
+
+If you choose to use `docker-compose` to build your solution, you can use [the provided test runner](./exercise-unit-test.sh) to validate your solution. It uses [a solution stack](./solution-stack.yaml) that cheats by setting `API_WAIT_SECONDS` to 0. Remove the env var and make any changes you then run `./exercise-unit-test.sh` to test. That might mean you build your solution in the `dso-dojo-slow-server` directory or you might do things elsewhere and just validate your solution in this directory.
+
+If you choose not to use `docker-compose`, not a problem! You can always take apart the test script and adapt it to your solution.
+
+
 ## Development
 
 You'll need the following tools:
