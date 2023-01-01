@@ -29,7 +29,7 @@ You'll need the following tools:
 To develop locally, you'll want to understand [the dev compose file](./dev-stack.yaml). This provides a simple Postgres container locally to test against. For example, to run the code tests,
 
 ```bash
-make dev-up
+make dev
 cargo test --verbose
-make dev-down
+make dev
 ```
