@@ -11,6 +11,8 @@ The following things are insecure. If there are others, feel free to open a PR t
 
 * [The dev compose file](./dev-stack.yaml) defines a `POSTGRES_PASSWORD` environment variable. Never store this in a repository.
 * [The Rocket config file](./Rocket.toml) defines a connection string in plaintext. Never store this in a repository.
+* [The Dockerfile](./Dockerfile) defines a connection string in plaintext. Never store this in a repository.
+* [The exercise compose file](./exercise-stack.yaml) defines a connection string in plaintext. Never store this in a repository.
 
 ## Overview
 
