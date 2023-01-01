@@ -8,3 +8,14 @@ services:
       POSTGRES_PASSWORD: plaintext
     ports:
       - "5432:5432"
+    networks:
+      network:
+        ipv4_address: 10.0.0.2
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+          gateway: 10.0.0.1
