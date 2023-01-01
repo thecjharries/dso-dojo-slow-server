@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use rand::prelude::*;
+use rand_pcg::Pcg64;
 use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
@@ -21,24 +23,32 @@ use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
 use std::io::Result;
 
-const API_WAIT_SECONDS: i32 = 30;
+const API_WAIT_SECONDS: i32 = 1;
 
 #[database("postgres")]
 struct Database(diesel::PgConnection);
 
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+struct ApiResponse {
+    id: u64,
+    token: String,
+}
+
 #[get("/api/<id>")]
-async fn api(conn: Database, id: u64) -> String {
-    if 0 == id {
-        conn.run(|c| {
-            sql_query("SELECT pg_sleep($1)")
-                .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
-                .execute(c)
-                .unwrap();
-        })
-        .await;
-        return "howdy".to_string();
+async fn api(conn: Database, id: u64) -> Json<ApiResponse> {
+    conn.run(|c| {
+        sql_query("SELECT pg_sleep($1)")
+            .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
+            .execute(c)
+            .unwrap();
+    })
+    .await;
+    let mut rng: Pcg64 = Pcg64::seed_from_u64(id);
+    let mut token: String = String::new();
+    for _ in 0..64 {
+        token.push(rng.gen_range('a'..='z'));
     }
-    id.to_string()
+    Json(ApiResponse { id, token })
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
