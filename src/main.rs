@@ -26,16 +26,19 @@ const API_WAIT_SECONDS: i32 = 30;
 #[database("postgres")]
 struct Database(diesel::PgConnection);
 
-#[get("/api")]
-async fn api(conn: Database) -> String {
-    conn.run(|c| {
-        sql_query("SELECT pg_sleep($1)")
-            .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
-            .execute(c)
-            .unwrap();
-    })
-    .await;
-    "howdy".to_string()
+#[get("/api/<id>")]
+async fn api(conn: Database, id: u64) -> String {
+    if 0 == id {
+        conn.run(|c| {
+            sql_query("SELECT pg_sleep($1)")
+                .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
+                .execute(c)
+                .unwrap();
+        })
+        .await;
+        return "howdy".to_string();
+    }
+    id.to_string()
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
