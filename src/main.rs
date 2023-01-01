@@ -111,13 +111,37 @@ mod tests {
     }
 
     #[test]
-    fn test_api() {
+    fn test_api_proper() {
         let client: Client = Client::tracked(rocket()).unwrap();
-        let start: Instant = Instant::now();
-        let response: LocalResponse = client.get("/api").dispatch();
-        let end: Instant = Instant::now();
-        assert_eq!(response.status(), rocket::http::Status::Ok);
-        assert_eq!(response.into_string().unwrap(), "howdy");
-        assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
+        let expected_responses: Vec<ApiResponse> = vec![
+            ApiResponse {
+                id: 10,
+                token: "hjupifwjnzholhbcehxlmdgaayihhjfbsnkmaecvmumzcmyfqueruzayamxhpflo"
+                    .to_string(),
+            },
+            ApiResponse {
+                id: 11,
+                token: "yasjymdhhvasuqowyidxvsuzxrusynlzbxhoulctrknnljohnqidzekeisqbrcyn"
+                    .to_string(),
+            },
+            ApiResponse {
+                id: 18446744073709551615,
+                token: "hfrickgjqfuupnkigfaurvmylyoldzyyagvmkutmlotzsewkrqakhtdjldvnfrni"
+                    .to_string(),
+            },
+        ];
+        for expected_response in expected_responses {
+            let start: Instant = Instant::now();
+            let response: LocalResponse = client
+                .get(format!("/api/{}", expected_response.id))
+                .dispatch();
+            let end: Instant = Instant::now();
+            assert_eq!(response.status(), rocket::http::Status::Ok);
+            assert_eq!(
+                response.into_json::<ApiResponse>().unwrap(),
+                expected_response
+            );
+            assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
+        }
     }
 }
