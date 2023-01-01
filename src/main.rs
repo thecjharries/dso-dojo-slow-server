@@ -144,4 +144,15 @@ mod tests {
             assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
         }
     }
+
+    #[test]
+    fn test_api_improper() {
+        let client: Client = Client::tracked(rocket()).unwrap();
+        let mut response: LocalResponse = client
+            .get(format!("/api/{}", u64::MAX as u128 + 1))
+            .dispatch();
+        assert_eq!(response.status(), rocket::http::Status::NotFound);
+        response = client.get("/api/test").dispatch();
+        assert_eq!(response.status(), rocket::http::Status::NotFound);
+    }
 }
