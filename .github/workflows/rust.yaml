@@ -25,11 +25,11 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Start Postgres
-        run: make dev-up
+        run: make dev
 
       - name: Test the server
         run: cargo test --verbose
 
       - name: Stop Postgres
         if: always()
-        run: make dev-down
+        run: make dev
