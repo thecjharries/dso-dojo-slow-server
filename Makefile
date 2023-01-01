@@ -8,3 +8,7 @@ dev-up:
 .PHONY: dev-down
 dev-down:
 	docker-compose --file dev-stack.yaml down
+
+.PHONY: docker-build
+docker-build:
+	docker build --tag thecjharries/dso_dojo_slow_postgres:latest .

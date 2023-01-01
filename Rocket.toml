@@ -1,2 +1,5 @@
+[default]
+address = "0.0.0.0"
+
 [global.databases.postgres]
 url = "postgres://postgres:plaintext@localhost:5432/postgres"
