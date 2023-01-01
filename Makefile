@@ -1,3 +1,5 @@
+FILE=exercise-stack.yaml
+
 .PHONY: all
 all:
 
@@ -20,3 +22,11 @@ exercise-up:
 .PHONY: exercise-down
 exercise-down:
 	docker-compose --file exercise-stack.yaml down
+
+.PHONY: docker-compose
+docker-compose:
+	if docker-compose ls | grep -q $(FILE); then \
+		docker-compose --file $(FILE) down; \
+	else \
+		docker-compose --file $(FILE) up --detach; \
+	fi
