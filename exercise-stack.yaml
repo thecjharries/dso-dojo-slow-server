@@ -11,6 +11,15 @@ services:
     networks:
       network:
         ipv4_address: 10.0.0.2
+  web:
+    image: thecjharries/dso_dojo_slow_postgres
+    environment:
+      ROCKET_DATABASES: '{postgres={url="postgres://postgres:plaintext@10.0.0.2:5432/postgres"}}'
+    ports:
+      - "8000:8000"
+    networks:
+      network:
+        ipv4_address: 10.0.0.3
 
 networks:
   network:
