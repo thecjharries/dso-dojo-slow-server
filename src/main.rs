@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use lazy_static::lazy_static;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rocket::fs::NamedFile;
@@ -21,9 +22,15 @@ use rocket_sync_db_pools::diesel::prelude::*;
 use rocket_sync_db_pools::diesel::sql_query;
 use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
+use std::env::var;
 use std::io::Result;
 
-const API_WAIT_SECONDS: i32 = 1;
+lazy_static! {
+    static ref API_WAIT_SECONDS: i32 = var("API_WAIT_SECONDS")
+        .unwrap_or("10".to_string())
+        .parse::<i32>()
+        .unwrap_or(10);
+}
 
 #[database("postgres")]
 struct Database(diesel::PgConnection);

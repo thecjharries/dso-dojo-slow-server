@@ -297,6 +297,7 @@ name = "dso_dojo_slow_postgres"
 version = "0.1.0"
 dependencies = [
  "diesel 2.0.2",
+ "lazy_static",
  "rand",
  "rand_pcg",
  "rocket",
