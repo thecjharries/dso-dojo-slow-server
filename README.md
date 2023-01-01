@@ -45,12 +45,42 @@ Acme adopted the `/ping` standard several years ago. This endpoint allows for a 
 
 #### API
 
-The `/api/<id>` endpoint is the main attraction. It takes a single unsigned 64-bit integer parameter, `id`, and returns a JSON object with the following structure:
+The `/api/<id>` endpoint is the main attraction. It takes a single unsigned 64-bit integer parameter, `id`, and returns a JSON object with the following schema:
 
 ```json
 {
-  "id": unsigned 64-bit integer,
-  "token": 64-character string,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dso_dojo_slow_postgres.com/api.schema.json",
+  "title": "API",
+  "description": "The API endpoint",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "The ID passed to the endpoint",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "token": {
+      "description": "The token returned by the endpoint",
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
+    }
+  },
+  "required": [
+    "id",
+    "token"
+  ]
+}
+```
+
+Here's an example return:
+
+```json
+{
+  "id": 10,
+  "token": "hjupifwjnzholhbcehxlmdgaayihhjfbsnkmaecvmumzcmyfqueruzayamxhpflo"
 }
 ```
 
