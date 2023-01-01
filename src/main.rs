@@ -45,7 +45,7 @@ struct ApiResponse {
 async fn api(conn: Database, id: u64) -> Json<ApiResponse> {
     conn.run(|c| {
         sql_query("SELECT pg_sleep($1)")
-            .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
+            .bind::<diesel::sql_types::Integer, _>(*API_WAIT_SECONDS)
             .execute(c)
             .unwrap();
     })
