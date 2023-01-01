@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use rand::prelude::*;
+use rand_pcg::Pcg64;
 use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket::{build, get, launch, routes};
@@ -21,13 +23,19 @@ use rocket_sync_db_pools::{database, diesel};
 use serde::{Deserialize, Serialize};
 use std::io::Result;
 
-const API_WAIT_SECONDS: i32 = 30;
+const API_WAIT_SECONDS: i32 = 1;
 
 #[database("postgres")]
 struct Database(diesel::PgConnection);
 
-#[get("/api")]
-async fn api(conn: Database) -> String {
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
+struct ApiResponse {
+    id: u64,
+    token: String,
+}
+
+#[get("/api/<id>")]
+async fn api(conn: Database, id: u64) -> Json<ApiResponse> {
     conn.run(|c| {
         sql_query("SELECT pg_sleep($1)")
             .bind::<diesel::sql_types::Integer, _>(API_WAIT_SECONDS)
@@ -35,7 +43,12 @@ async fn api(conn: Database) -> String {
             .unwrap();
     })
     .await;
-    "howdy".to_string()
+    let mut rng: Pcg64 = Pcg64::seed_from_u64(id);
+    let mut token: String = String::new();
+    for _ in 0..64 {
+        token.push(rng.gen_range('a'..='z'));
+    }
+    Json(ApiResponse { id, token })
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
@@ -98,13 +111,48 @@ mod tests {
     }
 
     #[test]
-    fn test_api() {
+    fn test_api_proper() {
         let client: Client = Client::tracked(rocket()).unwrap();
-        let start: Instant = Instant::now();
-        let response: LocalResponse = client.get("/api").dispatch();
-        let end: Instant = Instant::now();
-        assert_eq!(response.status(), rocket::http::Status::Ok);
-        assert_eq!(response.into_string().unwrap(), "howdy");
-        assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
+        let expected_responses: Vec<ApiResponse> = vec![
+            ApiResponse {
+                id: 10,
+                token: "hjupifwjnzholhbcehxlmdgaayihhjfbsnkmaecvmumzcmyfqueruzayamxhpflo"
+                    .to_string(),
+            },
+            ApiResponse {
+                id: 11,
+                token: "yasjymdhhvasuqowyidxvsuzxrusynlzbxhoulctrknnljohnqidzekeisqbrcyn"
+                    .to_string(),
+            },
+            ApiResponse {
+                id: 18446744073709551615,
+                token: "hfrickgjqfuupnkigfaurvmylyoldzyyagvmkutmlotzsewkrqakhtdjldvnfrni"
+                    .to_string(),
+            },
+        ];
+        for expected_response in expected_responses {
+            let start: Instant = Instant::now();
+            let response: LocalResponse = client
+                .get(format!("/api/{}", expected_response.id))
+                .dispatch();
+            let end: Instant = Instant::now();
+            assert_eq!(response.status(), rocket::http::Status::Ok);
+            assert_eq!(
+                response.into_json::<ApiResponse>().unwrap(),
+                expected_response
+            );
+            assert!(Duration::from_secs(API_WAIT_SECONDS.abs() as u64) < end.duration_since(start));
+        }
+    }
+
+    #[test]
+    fn test_api_improper() {
+        let client: Client = Client::tracked(rocket()).unwrap();
+        let mut response: LocalResponse = client
+            .get(format!("/api/{}", u64::MAX as u128 + 1))
+            .dispatch();
+        assert_eq!(response.status(), rocket::http::Status::NotFound);
+        response = client.get("/api/test").dispatch();
+        assert_eq!(response.status(), rocket::http::Status::NotFound);
     }
 }
