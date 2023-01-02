@@ -21,6 +21,7 @@ fi
 docker-compose --file solution-stack.yaml up --detach
 sleep 10
 curl --silent http://10.0.0.3:8000/ping | jq --exit-status '.message == "pong"' >/dev/null || exit 1
+curl --silent http://10.0.0.3:8000/api/10 | jq --exit-status '.id == 10' >/dev/null || exit 1
 start=$SECONDS
 curl --silent http://10.0.0.3:8000/api/10 | jq --exit-status '.id == 10' >/dev/null || exit 1
 solution_duration=$((SECONDS - start))
